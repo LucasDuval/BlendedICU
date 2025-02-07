@@ -1,4 +1,5 @@
 from pathlib import Path
+from zipfile import BadGzipFile
 
 import polars as pl
 import pandas as pd
@@ -71,17 +72,24 @@ class DataPreparator(DataProcessor):
         df_chunks = _read_chunks(pth_src, src_is_multiple_parquet)
 
 
-        for i, df in enumerate(df_chunks):
-            astype_dic = {k:v for k, v in astype_dic.items() if k in df.columns}
-            df = df.astype(astype_dic)
-            table = pa.Table.from_pandas(df)
-            if i == 0:
-                pqwriter = pq.ParquetWriter(pth_tgt, table.schema)            
-            pqwriter.write_table(table)
-        
-        if pqwriter:
-            pqwriter.close()
-        print('  -> Done')
+        try:
+            for i, df in enumerate(df_chunks):
+                astype_dic = {k:v for k, v in astype_dic.items() if k in df.columns}
+                df = df.astype(astype_dic)
+                table = pa.Table.from_pandas(df)
+                if i == 0:
+                    pqwriter = pq.ParquetWriter(pth_tgt, table.schema)            
+                pqwriter.write_table(table)
+
+            if pqwriter:
+                pqwriter.close()
+            print('  -> Done')
+        except BadGzipFile as e:
+            print(e)
+            print(f'  -> Failed - Check if your data {pth_src} is not corrupted')
+        except Exception as e:
+            print(e)
+            print('  -> Failed')
 
     def split_and_save_chunks(self, df, savepath):
         self.chunk_idx = 0
