@@ -87,9 +87,11 @@ class DataPreparator(DataProcessor):
         except BadGzipFile as e:
             print(e)
             print(f'  -> Failed - Check if your data {pth_src} is not corrupted')
+            quit()
         except Exception as e:
             print(e)
             print('  -> Failed')
+            quit()
 
     def split_and_save_chunks(self, df, savepath):
         self.chunk_idx = 0
