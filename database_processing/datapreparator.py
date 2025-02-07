@@ -1,5 +1,5 @@
 from pathlib import Path
-from zipfile import BadGzipFile
+from gzip import BadGzipFile
 
 import polars as pl
 import pandas as pd
